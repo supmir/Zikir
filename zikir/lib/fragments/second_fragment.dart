@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:zikir/utils/data.dart';
 import 'package:zikir/utils/glob.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -13,32 +14,32 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  var bools = initBool();
+  Data data = stringer(null);
 
   @override
   void initState() {
     super.initState();
     widget.storage.readSettings().then((String value) {
       setState(() {
-        bools = stringer(bools, value);
+        data = stringer(value);
       });
     });
   }
 
   Future<File> updateSettings() {
     setState(() {});
-    return widget.storage.writeSettings(bools);
+    return widget.storage.writeSettings(data);
   }
 
   @override
   Widget build(BuildContext context) {
     List<Widget> list = [];
-    for (String x in bools.keys) {
+    for (String x in data.interactions.bools.keys) {
       list.add(SwitchListTile(
-        value: bools[x],
+        value: data.interactions.bools[x],
         onChanged: (val) {
           setState(() {
-            bools[x] = !bools[x];
+            data.interactions.switchSomething(x);
           });
           updateSettings();
         },
@@ -68,35 +69,34 @@ class SettingsStorage {
 
   Future<File> get _localFile async {
     final path = await _localPath;
-    return File('$path/settings.txt');
+    return File('$path/data.json');
   }
 
   Future<String> readSettings() async {
-    print("Loading");
+    print("Loading settings");
     try {
       final file = await _localFile;
 
       // Read the file
       String contents = await file.readAsString();
+      print("Settings loaded");
 
+      print(contents);
       return contents;
     } catch (e) {
       // If encountering an error, return 0
 
-      return "T F F F T T T T T";
+      return null;
     }
   }
 
-  Future<File> writeSettings(var bools) async {
+  Future<File> writeSettings(Data data) async {
     final file = await _localFile;
-
+    String str = data.getJsonString();
     // Write the file
-    print("Saved");
-    String s = "";
-    for (String x in bools.keys) {
-      s += "${bools[x] ? 'T' : 'F'} ";
-    }
-    return file.writeAsString(s);
+    print("Saving...");
+    print(str);
+    return file.writeAsString(str);
   }
 }
 

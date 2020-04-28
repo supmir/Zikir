@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:vibration/vibration.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:zikir/utils/data.dart';
 import 'package:zikir/utils/glob.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -32,14 +33,14 @@ class _MyHomePageState extends State<MyHomePage> {
   ];
   String _curZikr = "Subhanallah";
   String _curZikr1 = "سُبْحَانَ ٱللَّٰهِ";
-  var bools = initBool();
+  Data data = stringer(null);
 
   @override
   void initState() {
     super.initState();
     widget.storage.readCounter().then((int value) {
       widget.storage.readSettings().then((String value) {
-        bools = stringer(bools, value);
+        data = stringer(value);
       });
 
       setState(() {
@@ -52,16 +53,16 @@ class _MyHomePageState extends State<MyHomePage> {
   void _gestureHandler(int type) {
     switch (type) {
       case 0:
-        if (bools['Tap']) _incrementCounter();
+        if (data.interactions.bools['Tap']) _incrementCounter();
         return null;
       case 1:
-        if (bools["Up"]) _incrementCounter();
+        if (data.interactions.bools["Up"]) _incrementCounter();
         return null;
       case 2:
-        if (bools["Down"]) _incrementCounter();
+        if (data.interactions.bools["Down"]) _incrementCounter();
         return null;
       case 3:
-        if (bools["Hold"]) _reset();
+        if (data.interactions.bools["Hold"]) _reset();
         return null;
     }
     _incrementCounter();
@@ -196,10 +197,10 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     List<Widget> counterWidgets = [
-      bools["Subhanallah"] ? _miniCounter(1) : null,
-      bools["Alhamdulillah"] ? _miniCounter(2) : null,
-      bools["Allahuakbar"] ? _miniCounter(3) : null,
-      bools["Lailahailallah"] ? _miniCounter(4) : null,
+      data.interactions.bools["Subhanallah"] ? _miniCounter(1) : null,
+      data.interactions.bools["Alhamdulillah"] ? _miniCounter(2) : null,
+      data.interactions.bools["Allahuakbar"] ? _miniCounter(3) : null,
+      data.interactions.bools["Lailahailallah"] ? _miniCounter(4) : null,
     ];
     counterWidgets.removeWhere((value) => value == null);
 
@@ -209,8 +210,8 @@ class _MyHomePageState extends State<MyHomePage> {
           //main counter
           flex: 1,
           child: Container()),
-      bools["Current"]?_currentZikr():null,
-      bools["Current"]?_currentZikr1():null,
+      data.interactions.bools["Current"]?_currentZikr():null,
+      data.interactions.bools["Current"]?_currentZikr1():null,
 
     ];
 
@@ -291,7 +292,7 @@ class CounterStorage {
     print("Loading");
     try {
       final path = await _localPath;
-      final file = new File('$path/settings.txt');
+      final file = new File('$path/data.json');
 
       // Read the file
       String contents = await file.readAsString();
@@ -300,7 +301,7 @@ class CounterStorage {
     } catch (e) {
       // If encountering an error, return 0
 
-      return "T F F F";
+      return null;
     }
   }
 
@@ -312,7 +313,7 @@ class CounterStorage {
 
   Future<File> get _localFile async {
     final path = await _localPath;
-    return File('$path/counter.txt');
+    return File('$path/data.json');
   }
 
   Future<int> readCounter() async {

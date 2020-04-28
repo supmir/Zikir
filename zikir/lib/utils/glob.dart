@@ -1,17 +1,39 @@
-stringer(var bools, String value) {
-  var b = value.split(" ");
-  int i = 0;
-  for (String x in bools.keys) {
-    bools[x] = b[i] == 'T' ? true : false;
-    i++;
-  }
+import 'dart:convert';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:zikir/utils/data.dart';
 
-  // for (int i=0; i < bools.length; i++) {
-  //   x.add(b[i] == 'T' ? true : false);
-  // }
-  // bools = new Map<String,bool>.fromIterables(bools.keys, x.getRange(0, x.length));
-  print(bools);
-  return bools;
+stringer(String json) {
+  try {
+    Data data = jsonDecode(json);
+    return data;
+  } catch (e) {
+    Data data = new Data(
+        Interactions({
+          'Tap': true, //tap
+          'Up': false, //up
+          'Down': false, //down
+          'Hold': false, //hold
+          'Current': true, //curent text
+          'Subhanallah': true, //subhanallah
+          'Alhamdulillah': true, //alhamdulillah
+          'Allahuakbar': true, //allahuakbar
+          'Lailahailallah': true, //lailahaillallah
+        }),
+        Counters());
+
+    var _zikirs1 = [
+      "سُبْحَانَ ٱللَّٰهِ",
+      "ٱلْحَمْدُ لِلَّٰ",
+      "اللّٰهُ أَكْبَر",
+      "لَا إِلَٰهَ إِلَّا ٱللَّٰهُ",
+    ];
+    data.counters.addNew("Subhanallah", _zikirs1[0], 0, 33);
+    data.counters.addNew("Alhamdulillah", _zikirs1[0], 0, 33);
+    data.counters.addNew("Allahuakbar", _zikirs1[0], 0, 33);
+    data.counters.addNew("Lailahailallah", _zikirs1[0], 0, 100);
+    return data;
+  }
 }
 
 initBool() {
@@ -28,10 +50,34 @@ initBool() {
   };
 }
 
-counterSetter(){
+Future<String> get _localPath async {
+  final directory = await getApplicationDocumentsDirectory();
 
+  return directory.path;
 }
 
-counterLimitSetter(){
-  
+Future<File> get _localFile async {
+  final path = await _localPath;
+  return File('$path/data.json');
+}
+
+Future<String> readSettings() async {
+  print("Loading");
+  try {
+    final file = await _localFile;
+
+    // Read the file
+    String contents = await file.readAsString();
+
+    return contents;
+  } catch (e) {
+    // If encountering an error, return 0
+
+    return null;
+  }
+}
+
+Future<File> writeSettings(Data data) async {
+  final file = await _localFile;
+  return file.writeAsString(data.toJson().toString());
 }
