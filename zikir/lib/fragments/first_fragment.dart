@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
@@ -17,37 +19,31 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  var _counters = [0, 0, 0, 0, 0];
+  int _mainCounter = 0;
   String _buttonStr = "Reset";
-  var _zikirs = [
-    "Subhanallah",
-    "Alhamdulillah",
-    "Allahuakbar",
-    "Lailahailallah",
-  ];
-  var _zikirs1 = [
-    "سُبْحَانَ ٱللَّٰهِ",
-    "ٱلْحَمْدُ لِلَّٰ",
-    "اللّٰهُ أَكْبَر",
-    "لَا إِلَٰهَ إِلَّا ٱللَّٰهُ",
-  ];
-  String _curZikr = "Subhanallah";
-  String _curZikr1 = "سُبْحَانَ ٱللَّٰهِ";
+  String _curZikr = "";
+  String _curZikr1 = "";
   Data data = stringer(null);
 
   @override
   void initState() {
+    //print("InitState");
     super.initState();
-    widget.storage.readCounter().then((int value) {
-      widget.storage.readSettings().then((String value) {
-        data = stringer(value);
-      });
-
+    widget.storage.readSettings().then((String value) {
       setState(() {
-        _counters[0] = value;
-        _initCounters();
+        //print("Initialising data");
+        data = stringer(value);
+        //print(data.getJsonString());
+        _mainCounter = data.counters.getTotal();
+        _updateCounters();
       });
     });
+    // widget.storage.readCounter().then((int value) {
+    //   setState(() {
+    //     _mainCounter = value;
+    //     _updateCounters();
+    //   });
+    // });
   }
 
   void _gestureHandler(int type) {
@@ -68,77 +64,33 @@ class _MyHomePageState extends State<MyHomePage> {
     _incrementCounter();
   }
 
-  void _initCounters() {
-    if (_counters[0] < 34) {
-      _counters[1] = _counters[0];
-      _curZikr = _zikirs[0];
-      _curZikr1 = _zikirs1[0];
-    } else if (_counters[0] < 67) {
-      _counters[1] = 33;
-      _counters[2] = _counters[0] - 33;
-      _curZikr = _zikirs[1];
-      _curZikr1 = _zikirs1[1];
-    } else if (_counters[0] < 100) {
-      _counters[1] = 33;
-      _counters[2] = 33;
-      _counters[3] = _counters[0] - 66;
-      _curZikr = _zikirs[2];
-      _curZikr1 = _zikirs1[2];
-    } else {
-      _counters[1] = 33;
-      _counters[2] = 33;
-      _counters[3] = 33;
-      _counters[4] = _counters[0] - 99;
-      _curZikr = _zikirs[3];
-      _curZikr1 = _zikirs1[3];
-    }
-  }
-
   void _vibrate() {
     Vibration.vibrate(duration: 1000);
   }
 
-  void _setCounters() {
-    if (_counters[0] < 34) {
-      _counters[1] = _counters[0];
-      _curZikr = _zikirs[0];
-      _curZikr1 = _zikirs1[0];
-    } else if (_counters[0] < 67) {
-      _counters[2] = _counters[0] - 33;
-      _curZikr = _zikirs[1];
-      _curZikr1 = _zikirs1[1];
-
-      print(_zikirs.toString());
-    } else if (_counters[0] < 100) {
-      _counters[3] = _counters[0] - 66;
-      _curZikr = _zikirs[2];
-      _curZikr1 = _zikirs1[2];
-    } else {
-      _counters[4] = _counters[0] - 99;
-      _curZikr = _zikirs[3];
-      _curZikr1 = _zikirs1[3];
-    }
-    if (_counters[0] == 33 ||
-        _counters[0] == 66 ||
-        _counters[0] == 99 ||
-        _counters[0] == 199) _vibrate();
-        //TODO: Play sound
+  void _updateCounters() {
+    //print("\n\n\n\n\n\n\nUpdating Counters");
+    Counter current = data.counters.update(_mainCounter);
+    
+    print(current.name);
+    _curZikr = current.name;
+    _curZikr1 = current.sentence;
+    //TODO: Play sound
   }
 
   Future<File> _incrementCounter() {
     // _save(++_counter);
     setState(() {
       _buttonStr = "Reset";
-      _counters[0]++;
-      _setCounters();
+      _mainCounter++;
+      _updateCounters();
     });
-    return widget.storage.writeCounter(_counters[0]);
+    return widget.storage.writeSettings(data);
   }
 
   void _panEnd(DragEndDetails dragEndDetails) {
     double sensitivity = 1000.0;
     double dy = dragEndDetails.velocity.pixelsPerSecond.dy;
-    print(dy);
     if (dy < -sensitivity) {
       print("Up flick detected");
       _gestureHandler(1);
@@ -150,12 +102,15 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _reset() {
-    print("reset");
     setState(() {
       _buttonStr = "Reset";
-      _counters = [-1, 0, 0, 0, 0];
+      _mainCounter = 0;
+      data.counters.update(_mainCounter);
+      widget.storage.writeSettings(data);
+      //print("\n\n\nreset");
+
+      _updateCounters();
     });
-    _gestureHandler(-1);
   }
 
   Widget _miniCounter(int x) {
@@ -167,7 +122,7 @@ class _MyHomePageState extends State<MyHomePage> {
           //     border: Border.all(color: Colors.black)),
           child: Center(
             child: AutoSizeText(
-              '${_counters[x]}',
+              '$x',
               style: TextStyle(fontSize: 35, color: Colors.white),
               maxLines: 1,
             ),
@@ -175,7 +130,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _currentZikr(){
+  Widget _currentZikr() {
     return Center(
       child: AutoSizeText(
         '$_curZikr',
@@ -184,7 +139,8 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-  Widget _currentZikr1(){
+
+  Widget _currentZikr1() {
     return Center(
       child: AutoSizeText(
         '$_curZikr1',
@@ -193,16 +149,14 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
-    List<Widget> counterWidgets = [
-      data.interactions.bools["Subhanallah"] ? _miniCounter(1) : null,
-      data.interactions.bools["Alhamdulillah"] ? _miniCounter(2) : null,
-      data.interactions.bools["Allahuakbar"] ? _miniCounter(3) : null,
-      data.interactions.bools["Lailahailallah"] ? _miniCounter(4) : null,
-    ];
-    counterWidgets.removeWhere((value) => value == null);
+    List<Widget> counterWidgets = [];
+
+    for (String x in data.counters.counterList.keys) {
+      counterWidgets.add(_miniCounter(data.counters.counterList[x].value));
+    }
 
     List<Widget> display = [
       Row(children: counterWidgets),
@@ -210,11 +164,9 @@ class _MyHomePageState extends State<MyHomePage> {
           //main counter
           flex: 1,
           child: Container()),
-      data.interactions.bools["Current"]?_currentZikr():null,
-      data.interactions.bools["Current"]?_currentZikr1():null,
-
+      data.interactions.bools["Current"] ? _currentZikr() : null,
+      data.interactions.bools["Current"] ? _currentZikr1() : null,
     ];
-
 
     display.removeWhere((value) => value == null);
     display.add(Expanded(
@@ -222,7 +174,7 @@ class _MyHomePageState extends State<MyHomePage> {
       //main counter
       child: Center(
         child: Text(
-          '${_counters[0]}',
+          '${_mainCounter}',
           style: TextStyle(fontSize: 100, color: Colors.white),
         ),
       ),
@@ -289,13 +241,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class CounterStorage {
   Future<String> readSettings() async {
-    print("Loading");
+    //print("Loading settings file");
     try {
-      final path = await _localPath;
-      final file = new File('$path/data.json');
-
+      final file = await _localFile;
       // Read the file
       String contents = await file.readAsString();
+      //print(contents);
 
       return contents;
     } catch (e) {
@@ -316,28 +267,17 @@ class CounterStorage {
     return File('$path/data.json');
   }
 
-  Future<int> readCounter() async {
-    print("Loading");
-    try {
-      final file = await _localFile;
-
-      // Read the file
-      String contents = await file.readAsString();
-
-      return int.parse(contents);
-    } catch (e) {
-      // If encountering an error, return 0
-      return 0;
-    }
-  }
-
-  Future<File> writeCounter(int counter) async {
+  Future<File> writeSettings(Data data) async {
     final file = await _localFile;
-
-    // Write the file
-    print("Saved");
-
-    return file.writeAsString('$counter');
+    try {
+      String str = jsonEncode(data);
+      // Write the file
+      //print("Saving...");
+      //print(str);
+      return file.writeAsString(str);
+    } catch (e) {
+      return file.writeAsString("");
+    }
   }
 }
 

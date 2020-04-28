@@ -72,6 +72,42 @@ class Counters {
   addNew(String name, String sentence, int value, int maxValue) {
     Counter temp = new Counter(name, sentence, value, maxValue);
     counterList[name] = temp;
-    // counterList.update(name, temp);
+  }
+
+  updateValue(String key, int value) {
+    counterList[key].value = value;
+  }
+
+  update(int main) {
+    print("Start of update $main");
+    Counter temp;
+    bool reachedZero = false;
+    for (String key in counterList.keys) {
+      int max = counterList[key].maxValue;
+      print("$main > $max ??");
+      if (main > max) {
+        print("$main > $max");
+        updateValue(key, max);
+        main -= max;
+      } else if (main >= 0) {
+        updateValue(key, main);
+        main -= main;
+        if (!reachedZero) {
+          temp = counterList[key];
+          reachedZero = true;
+        }
+      }
+    }
+    print("\n\n\n\nhere");
+    print(temp);
+    return temp;
+  }
+
+  int getTotal() {
+    int total = 0;
+    for (String key in counterList.keys) {
+      total += counterList[key].value;
+    }
+    return total;
   }
 }

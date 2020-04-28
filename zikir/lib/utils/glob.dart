@@ -3,24 +3,17 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:zikir/utils/data.dart';
 
-stringer(String json) {
+stringer(String jsonString) {
+  // print("Decoding");
   try {
-    Data data = jsonDecode(json);
+    Map dataMap = jsonDecode(jsonString);
+    // Map dataMap = jsonDecode(null);
+    Data data = Data.fromJson(dataMap);
     return data;
   } catch (e) {
-    Data data = new Data(
-        Interactions({
-          'Tap': true, //tap
-          'Up': false, //up
-          'Down': false, //down
-          'Hold': false, //hold
-          'Current': true, //curent text
-          'Subhanallah': true, //subhanallah
-          'Alhamdulillah': true, //alhamdulillah
-          'Allahuakbar': true, //allahuakbar
-          'Lailahailallah': true, //lailahaillallah
-        }),
-        Counters());
+    // print("Error decoding");
+    // print(jsonString);
+    Data data = new Data(Interactions(initBool()), Counters());
 
     var _zikirs1 = [
       "سُبْحَانَ ٱللَّٰهِ",
@@ -43,10 +36,10 @@ initBool() {
     'Down': false, //down
     'Hold': false, //hold
     'Current': true, //curent text
-    'Subhanallah': true, //subhanallah
-    'Alhamdulillah': true, //alhamdulillah
-    'Allahuakbar': true, //allahuakbar
-    'Lailahailallah': true, //lailahaillallah
+    // 'Subhanallah': true, //subhanallah
+    // 'Alhamdulillah': true, //alhamdulillah
+    // 'Allahuakbar': true, //allahuakbar
+    // 'Lailahailallah': true, //lailahaillallah
   };
 }
 
@@ -62,7 +55,7 @@ Future<File> get _localFile async {
 }
 
 Future<String> readSettings() async {
-  print("Loading");
+  // print("Loading");
   try {
     final file = await _localFile;
 
