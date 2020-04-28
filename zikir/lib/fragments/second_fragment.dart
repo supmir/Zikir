@@ -6,100 +6,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:zikir/utils/data.dart';
 import 'package:zikir/utils/glob.dart';
 
-class SettingsPage extends StatefulWidget {
-  final SettingsStorage storage = SettingsStorage();
-
-  SettingsPage({Key key, this.title}) : super(key: key);
-  final String title;
-  @override
-  _SettingsPageState createState() => _SettingsPageState();
-}
-
-class _SettingsPageState extends State<SettingsPage> {
-  Data data = stringer(null);
-  String resetText = "Reset application";
-
-  // resetTextChange() {
-  //   resetText = "Press and Hold to reset";
-  // }
-
-  @override
-  void initState() {
-    super.initState();
-    widget.storage.readSettings().then((String value) {
-      setState(() {
-        data = stringer(value);
-      });
-    });
-  }
-
-  Future<File> updateSettings() {
-    setState(() {});
-    return widget.storage.writeSettings(data);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    List<Widget> list = [];
-    for (String x in data.interactions.bools.keys) {
-      list.add(Card(
-        child: SwitchListTile(
-          value: data.interactions.bools[x],
-          onChanged: (val) {
-            setState(() {
-              data.interactions.switchSomething(x);
-            });
-            updateSettings();
-          },
-          title: Text(x),
-        ),
-      ));
-    }
-    for (String x in data.counters.counterList.keys) {
-      Counter temp = data.counters.counterList[x];
-      list.add(Card(
-        child: ListTile(
-          title: Text('$x'),
-          subtitle: Text('${temp.sentence}\nMaximum value: ${temp.maxValue}'),
-          trailing: Icon(Icons.more_vert),
-          isThreeLine: true,
-        ),
-      ));
-    }
-    list.add(Card(
-      child: ListTile(
-        title: Icon(Icons.add_circle),
-      ),
-    ));
-
-    //TODO: add custom zikir options
-    list.add(Card(
-      child: ListTile(
-        title: Center(child: Text(resetText)),
-        onTap: () {
-          setState(
-            () {
-              resetText = "Press and hold to reset";
-            },
-          );
-        },
-        onLongPress: resetApp,
-      ),
-    ));
-
-    return Scaffold(
-      body: Center(
-        child: ListView(children: list),
-      ),
-    );
-  }
-
-  resetApp() {
-    widget.storage.writeSettings(null);
-    return new SecondFragment();
-  }
-}
-
 class SettingsStorage {
   Future<String> get _localPath async {
     final directory = await getApplicationDocumentsDirectory();
@@ -148,6 +54,110 @@ class SecondFragment extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
+
     return new Center(child: SettingsPage());
+  }
+}
+
+class SettingsPage extends StatefulWidget {
+  final SettingsStorage storage = SettingsStorage();
+
+  SettingsPage({Key key, this.title}) : super(key: key);
+  final String title;
+  @override
+  _SettingsPageState createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  Data data = stringer(null);
+  String resetText = "Reset application";
+  @override
+  void initState() {
+    super.initState();
+    widget.storage.readSettings().then((String value) {
+      setState(() {
+        data = stringer(value);
+      });
+    });
+  }
+
+  Future<File> updateSettings() {
+    setState(() {});
+    return widget.storage.writeSettings(data);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    List<Widget> page1 = [];
+    List<Widget> page2 = [];
+    List<Widget> page3 = [];
+    for (String x in data.interactions.bools.keys) {
+      page1.add(Card(
+        child: SwitchListTile(
+          value: data.interactions.bools[x],
+          onChanged: (val) {
+            setState(() {
+              data.interactions.switchSomething(x);
+            });
+            // updateSettings();
+          },
+          title: Text(x),
+        ),
+      ));
+    }
+
+    for (String x in data.counters.counterList.keys) {
+      Counter temp = data.counters.counterList[x];
+      page2.add(Card(
+        child: ListTile(
+          title: Text('$x'),
+          subtitle: Text('${temp.sentence}\nMaximum value: ${temp.maxValue}'),
+          trailing: Icon(Icons.more_vert),
+          isThreeLine: true,
+        ),
+      ));
+    }
+    page2.add(Card(
+      child: ListTile(
+        title: Icon(Icons.add_circle),
+      ),
+    ));
+    page3.add(Card(
+      child: ListTile(
+        title: Center(child: Text("Made by: Amir Iskandar")),
+      ),
+    ));
+    page3.add(Card(
+      child: ListTile(
+        title: Center(child: Text(resetText)),
+        onTap: () {
+          setState(
+            () {
+              resetText = "Press and hold to reset";
+            },
+          );
+        },
+        onLongPress: resetApp,
+      ),
+    ));
+
+    return TabBarView(
+      children: [
+        Center(
+          child: ListView(children: page1),
+        ),
+        Center(
+          child: ListView(children: page2),
+        ),
+        Center(
+          child: ListView(children: page3),
+        ),
+      ],
+    );
+  }
+
+  resetApp() {
+    widget.storage.writeSettings(null);
+    return new SecondFragment();
   }
 }

@@ -174,7 +174,7 @@ class _MyHomePageState extends State<MyHomePage> {
       //main counter
       child: Center(
         child: Text(
-          '${_mainCounter}',
+          '$_mainCounter',
           style: TextStyle(fontSize: 100, color: Colors.white),
         ),
       ),

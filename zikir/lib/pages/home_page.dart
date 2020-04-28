@@ -10,8 +10,8 @@ class DrawerItem {
 
 class HomePage extends StatefulWidget {
   final drawerItems = [
-    new DrawerItem("Counter", Icons.rss_feed),
-    new DrawerItem("Settings", Icons.local_pizza),
+    new DrawerItem("Counter", Icons.brightness_3),
+    new DrawerItem("Settings", Icons.settings),
   ];
 
   @override
@@ -37,7 +37,10 @@ class HomePageState extends State<HomePage> {
   }
 
   _onSelectItem(int index) {
-    setState(() => _selectedDrawerIndex = index);
+    setState(() {
+      _selectedDrawerIndex = index;
+      if (index == 1) {}
+    });
     Navigator.of(context).pop(); // close the drawer
   }
 
@@ -54,32 +57,48 @@ class HomePageState extends State<HomePage> {
       ));
     }
 
-    return new Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text("Zikir"),
-      ),
-      drawer: new Drawer(
-        child: new Column(
-          children: <Widget>[
-            DrawerHeader(
-              child: Center(
-                child: Text('Zikir',style: TextStyle(fontSize: 50),),
+    return DefaultTabController(
+      length: 3,
+      child: new Scaffold(
+        appBar: buildAppBar(_selectedDrawerIndex),
+        drawer: new Drawer(
+          child: new Column(
+            children: <Widget>[
+              DrawerHeader(
+                child: Center(
+                  child: Text(
+                    'Zikir',
+                    style: TextStyle(fontSize: 50),
+                  ),
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                ),
               ),
-              decoration: BoxDecoration(
-                color: Colors.blue,
-              ),
-            ),
-            new Column(children: drawerOptions),
-            // ListTile(
-            //   title:Text("Counter"),
-            //   onTap: _onSelectItem(0),
-            // )
-          ],
+              new Column(children: drawerOptions),
+            ],
+          ),
         ),
+        body: _getDrawerItemWidget(_selectedDrawerIndex),
       ),
-      body: _getDrawerItemWidget(_selectedDrawerIndex),
+    );
+  }
+
+  AppBar buildAppBar(int _selectedDrawerIndex) {
+    if (_selectedDrawerIndex == 1) {
+      return AppBar(
+        title: Text("Zikir"),
+        bottom: TabBar(
+          tabs: [
+            Tab(icon: Icon(Icons.gesture)),
+            Tab(icon: Icon(Icons.control_point_duplicate)),
+            Tab(icon: Icon(Icons.person)),
+          ]
+        ),
+      );
+    }
+    return AppBar(
+      title: Text("Zikir"),
     );
   }
 }
