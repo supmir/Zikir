@@ -39,7 +39,7 @@ Counter _$CounterFromJson(Map<String, dynamic> json) {
     json['sentence'] as String,
     json['value'] as int,
     json['maxValue'] as int,
-  );
+  )..active = json['active'] as bool;
 }
 
 Map<String, dynamic> _$CounterToJson(Counter instance) => <String, dynamic>{
@@ -47,6 +47,7 @@ Map<String, dynamic> _$CounterToJson(Counter instance) => <String, dynamic>{
       'sentence': instance.sentence,
       'value': instance.value,
       'maxValue': instance.maxValue,
+      'active': instance.active,
     };
 
 Counters _$CountersFromJson(Map<String, dynamic> json) {

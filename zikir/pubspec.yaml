@@ -35,6 +35,8 @@ dev_dependencies:
     sdk: flutter
   build_runner: ^1.9.0
   json_serializable: ^3.3.0
+  flutter_ringtone_player: ^2.0.0
+
 
 
 

@@ -34,8 +34,8 @@ class _MyHomePageState extends State<MyHomePage> {
         //print("Initialising data");
         data = stringer(value);
         //print(data.getJsonString());
+        _updateCounters(false);
         _mainCounter = data.counters.getTotal();
-        _updateCounters();
       });
     });
     // widget.storage.readCounter().then((int value) {
@@ -68,11 +68,10 @@ class _MyHomePageState extends State<MyHomePage> {
     Vibration.vibrate(duration: 1000);
   }
 
-  void _updateCounters() {
+  void _updateCounters(bool reset) {
     //print("\n\n\n\n\n\n\nUpdating Counters");
-    Counter current = data.counters.update(_mainCounter);
-    
-    print(current.name);
+    // Counter current = data.counters.update(_mainCounter);
+    Counter current = data.counters.update(reset);
     _curZikr = current.name;
     _curZikr1 = current.sentence;
     //TODO: Play sound
@@ -82,8 +81,9 @@ class _MyHomePageState extends State<MyHomePage> {
     // _save(++_counter);
     setState(() {
       _buttonStr = "Reset";
-      _mainCounter++;
-      _updateCounters();
+      // _mainCounter++;
+      _updateCounters(false);
+      _mainCounter = data.counters.resetHeadcount();
     });
     return widget.storage.writeSettings(data);
   }
@@ -105,11 +105,11 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _buttonStr = "Reset";
       _mainCounter = 0;
-      data.counters.update(_mainCounter);
+      data.counters.reset();
       widget.storage.writeSettings(data);
       //print("\n\n\nreset");
 
-      _updateCounters();
+      _updateCounters(true);
     });
   }
 
@@ -155,7 +155,8 @@ class _MyHomePageState extends State<MyHomePage> {
     List<Widget> counterWidgets = [];
 
     for (String x in data.counters.counterList.keys) {
-      counterWidgets.add(_miniCounter(data.counters.counterList[x].value));
+      if (data.counters.counterList[x].active)
+        counterWidgets.add(_miniCounter(data.counters.counterList[x].value));
     }
 
     List<Widget> display = [

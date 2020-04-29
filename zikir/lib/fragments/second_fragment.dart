@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
@@ -69,6 +68,9 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  final _formKey = GlobalKey<FormState>();
+  Counter counter = new Counter.def();
+
   Data data = stringer(null);
   String resetText = "Reset application";
   @override
@@ -86,48 +88,200 @@ class _SettingsPageState extends State<SettingsPage> {
     return widget.storage.writeSettings(data);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    List<Widget> page1 = [];
-    List<Widget> page2 = [];
-    List<Widget> page3 = [];
+  buildPage1() {
+    List<Widget> temp = [];
     for (String x in data.interactions.bools.keys) {
-      page1.add(Card(
+      temp.add(Card(
         child: SwitchListTile(
           value: data.interactions.bools[x],
           onChanged: (val) {
             setState(() {
               data.interactions.switchSomething(x);
             });
-            // updateSettings();
+            updateSettings();
           },
           title: Text(x),
         ),
       ));
     }
+    return temp;
+  }
 
-    for (String x in data.counters.counterList.keys) {
-      Counter temp = data.counters.counterList[x];
-      page2.add(Card(
+  buildPage2() {
+    List<Widget> temp1 = [];
+
+    for (String key in data.counters.counterList.keys) {
+      Counter temp = data.counters.counterList[key];
+      temp1.add(Card(
         child: ListTile(
-          title: Text('$x'),
+          title: Text('$key'),
           subtitle: Text('${temp.sentence}\nMaximum value: ${temp.maxValue}'),
-          trailing: Icon(Icons.more_vert),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Checkbox(value: temp.active, onChanged: (value){
+                setState(() {
+                  // temp.changeActive();
+                  data.counters.changeActive(key);
+                });
+                updateSettings();
+              }),
+              PopupMenuButton(
+                onSelected: (result) {
+                  switch (result) {
+                    case 1:
+                      break;
+                    case 2:
+                      setState(() {
+                        data.counters.removeByString(key);
+                      });
+                      updateSettings();
+                      break;
+                  }
+                },
+                icon: Icon(Icons.more_vert),
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    child: Text("Edit"),
+                    value: 1,
+                  ),
+                  PopupMenuItem(
+                    child: Text("Delete"),
+                    value: 2,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // trailing: Container,
           isThreeLine: true,
+          // onLongPress: () {
+          //   setState(() {
+          //     data.counters.removeByString(x);
+          //   });
+          //   updateSettings();
+          // },
         ),
       ));
     }
-    page2.add(Card(
+    temp1.add(Card(
       child: ListTile(
         title: Icon(Icons.add_circle),
+        onTap: () {
+          showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return buildAlertDialog(context);
+              });
+        },
       ),
     ));
-    page3.add(Card(
+    return temp1;
+  }
+
+  AlertDialog buildAlertDialog(BuildContext context) {
+    return AlertDialog(
+      content: Stack(
+        overflow: Overflow.visible,
+        children: <Widget>[
+          Positioned(
+            right: -40.0,
+            top: -40.0,
+            child: InkResponse(
+              onTap: () {
+                Navigator.of(context).pop();
+              },
+              child: CircleAvatar(
+                child: Icon(Icons.close),
+                backgroundColor: Colors.black38,
+              ),
+            ),
+          ),
+          buildForm(context),
+        ],
+      ),
+    );
+  }
+
+  Form buildForm(BuildContext context) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Padding(
+              padding: EdgeInsets.all(0),
+              child: TextFormField(
+                decoration: const InputDecoration(hintText: "Name"),
+                validator: (value) {
+                  if (value.isEmpty) {
+                    return "Please enter a name";
+                  }
+                },
+                onSaved: (val) {
+                  counter.setName(val);
+                },
+              )),
+          Padding(
+              padding: EdgeInsets.all(0),
+              child: TextFormField(
+                decoration: const InputDecoration(hintText: "Subtitle"),
+                validator: (value) {
+                  if (value.isEmpty) {
+                    return "Please enter a subtitle";
+                  }
+                },
+                onSaved: (val) {
+                  counter.setSentence(val);
+                },
+              )),
+          Padding(
+              padding: EdgeInsets.all(0),
+              child: TextFormField(
+                decoration: const InputDecoration(hintText: "Maximum Value"),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value.isEmpty) {
+                    return "false";
+                  }
+                  return int.tryParse(value) == null
+                      ? "Please only enter number"
+                      : null;
+                },
+                onSaved: (val) {
+                  counter.setMaxValue(int.parse(val));
+                },
+              )),
+          Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: RaisedButton(
+              child: Text("Save"),
+              onPressed: () {
+                if (_formKey.currentState.validate()) {
+                  _formKey.currentState.save();
+                  setState(() {
+                    data.counters.addNewByCounter(counter);
+                    counter = new Counter.def();
+                    updateSettings();
+                  });
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  buildPage3() {
+    List<Widget> temp = [];
+    temp.add(Card(
       child: ListTile(
         title: Center(child: Text("Made by: Amir Iskandar")),
       ),
     ));
-    page3.add(Card(
+    temp.add(Card(
       child: ListTile(
         title: Center(child: Text(resetText)),
         onTap: () {
@@ -140,6 +294,15 @@ class _SettingsPageState extends State<SettingsPage> {
         onLongPress: resetApp,
       ),
     ));
+
+    return temp;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    List<Widget> page1 = buildPage1();
+    List<Widget> page2 = buildPage2();
+    List<Widget> page3 = buildPage3();
 
     return TabBarView(
       children: [
@@ -158,6 +321,19 @@ class _SettingsPageState extends State<SettingsPage> {
 
   resetApp() {
     widget.storage.writeSettings(null);
-    return new SecondFragment();
+    initState();
   }
 }
+
+class Choice {
+  const Choice({this.title, this.icon});
+
+  final String title;
+  final IconData icon;
+}
+
+const List<Choice> choices = const <Choice>[
+  const Choice(title: 'Edit', icon: Icons.directions_bus),
+  const Choice(title: 'Disable', icon: Icons.directions_railway),
+  const Choice(title: 'Delete', icon: Icons.directions_walk),
+];
